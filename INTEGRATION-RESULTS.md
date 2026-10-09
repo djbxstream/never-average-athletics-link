@@ -2,34 +2,54 @@
 
 ## Summary
 
-Successfully implemented the GitHub Pages link resolver workflow for Never Average Athletics, following the SL-Rat / Utilities Dashboard reference architecture.
+Successfully implemented and published the GitHub Pages link resolver workflow for Never Average Athletics, following the SL-Rat / Utilities Dashboard reference architecture.
+
+## Final Configuration
+
+**Stable Public GitHub Pages URL:** https://djbxstream.github.io/never-average-athletics-link/
+
+**GitHub Repository:** https://github.com/djbxstream/never-average-athletics-link
+
+**GitHub Pages Configuration:**
+- Source: `main` branch
+- Path: `/` (root)
+- HTTPS enforced: Yes
+- Public: Yes
 
 ## Components Created
 
 ### 1. Website Project (`/home/djbxstream/Development/never-average-athletics`)
-- **Preview automation**: `scripts/preview-auto.sh` — builds, starts production server, creates Cloudflare Quick Tunnel
-- **URL publishing**: `scripts/publish-public-url.sh` — validates tunnel URL, updates link repo, commits, pushes, verifies GitHub Pages
-- **Link repo setup**: `scripts/setup-link-repo.sh` — helper to configure GitHub remote after creating the repo
-- **Preview commands**: `npm run preview:start` / `npm run preview:stop`
+- `scripts/preview-auto.sh` — Builds, starts production server, creates Cloudflare Quick Tunnel
+- `scripts/publish-public-url.sh` — Validates tunnel URL, updates link repo, commits, pushes, verifies GitHub Pages
+- `scripts/setup-link-repo.sh` — Helper to configure GitHub remote
+- `npm run preview:start` / `npm run preview:stop` — Canonical preview commands
 
 ### 2. Link Project (`/mnt/e/Development/never-average-athletics-link`)
-- **index.html** — Visitor-facing redirect page (no password gate, auto-redirects to current tunnel URL)
-- **public-url.json** — Current tunnel URL (updated by publishing script)
-- **README.md** — Documentation
-- **INTEGRATION-RESULTS.md** — This file
+- `index.html` — Visitor-facing redirect page (no password, auto-redirects to current tunnel URL)
+- `public-url.json` — Current tunnel URL (updated by publishing script)
+- `README.md` / `INTEGRATION-RESULTS.md` — Documentation
 
-## Workflow Verification
+## Verification Results
 
-### Preview System ✅
+### ✅ Test 1: Preview Starts and Gets Tunnel URL
 ```bash
 npm run preview:start
 ```
 - Builds Next.js production bundle
 - Starts production server on port 3002
 - Creates Cloudflare Quick Tunnel
-- Obtains public tunnel URL (e.g., `https://republicans-harry-federation-timely.trycloudflare.com`)
-- Attempts to publish to link resolver (fails gracefully if link repo remote not configured)
+- Obtains public tunnel URL (e.g., `https://serve-seen-cooperation-quantitative.trycloudflare.com`)
 
+### ✅ Test 2: Publishing Script Updates Link Resolver
+- Reads tunnel URL from `.preview/url.txt`
+- Validates Cloudflare Quick Tunnel format
+- Updates `public-url.json` in link repo with consistent formatting
+- Commits and pushes to GitHub
+- Derives GitHub Pages URL from link repo's `origin` remote (no hardcoding)
+- **Verifies GitHub Pages serves the new URL** (with cache-busting, up to 180s timeout)
+- **Verified after 13 attempts (~65 seconds)** on first run, **8 attempts (~40 seconds)** on restart
+
+### ✅ Test 3: Preview Stops Cleanly
 ```bash
 npm run preview:stop
 ```
@@ -37,88 +57,66 @@ npm run preview:stop
 - Stops production server
 - Cleans up PID files and logs
 
-### Link Resolver ✅
-- **index.html**: Auto-loads `public-url.json`, validates URL format, redirects to tunnel origin
-- **public-url.json**: Single-key JSON with current tunnel URL
-- No password gate — visitors are redirected immediately
-- Validates only HTTPS Cloudflare Quick Tunnel URLs (prevents open redirect)
-
-### Publishing Script ✅
-- Reads tunnel URL from `.preview/url.txt`
-- Validates Cloudflare Quick Tunnel format
-- Updates `public-url.json` in link repo with consistent formatting
-- Commits and pushes to GitHub
-- Derives GitHub Pages URL from link repo's `origin` remote (no hardcoding)
-- Verifies GitHub Pages serves the new URL (with cache-busting, up to 180s timeout)
-- Warns but doesn't fail if verification times out (push succeeded)
-
-## Remaining Setup Required
-
-### 1. Create GitHub Repository
-Create the repository on GitHub:
-- **Repository name**: `never-average-athletics-link`
-- **Visibility**: Public (required for GitHub Pages)
-- **Initialize**: No (we have local commits)
-
-### 2. Configure Link Repository Remote
-Run the setup script after creating the GitHub repo:
-```bash
-bash scripts/setup-link-repo.sh https://github.com/djbxstream/never-average-athletics-link.git
-```
-Or with SSH:
-```bash
-bash scripts/setup-link-repo.sh git@github.com:djbxstream/never-average-athletics-link.git
-```
-
-### 3. Enable GitHub Pages
-1. Go to: `https://github.com/djbxstream/never-average-athletics-link/settings/pages`
-2. Source: **Deploy from a branch**
-3. Branch: **main** / **/(root)**
-4. Click **Save**
-
-The public URL will be: **https://djbxstream.github.io/never-average-athletics-link/**
-
-## Verification Tests
-
-### Test 1: Preview Starts and Gets Tunnel URL ✅
-```bash
-npm run preview:start
-```
-Result: Tunnel created at `https://republicans-harry-federation-timely.trycloudflare.com`
-
-### Test 2: Preview Stops Cleanly ✅
+### ✅ Test 3: Restart Test - New Tunnel URL Published Automatically
 ```bash
 npm run preview:stop
+npm run preview:start
 ```
-Result: Tunnel and server stopped, PIDs cleaned up
+- **Old tunnel:** `https://serve-seen-cooperation-quantitative.trycloudflare.com`
+- **New tunnel:** `https://fits-technical-discuss-those.trycloudflare.com`
+- **Public URL updated and verified** after 8 attempts (~40 seconds)
+- **Same GitHub Pages URL** (`https://djbxstream.github.io/never-average-athletics-link/`) now redirects to new destination
 
-### Test 3: Publishing Script Detects Missing Remote ✅
-When link repo has no origin remote, publish script reports clear error and preview continues.
+### ✅ Test 4: Link Resolver Works
+- `public-url.json` served at `https://djbxstream.github.io/never-average-athletics-link/public-url.json`
+- `index.html` auto-loads `public-url.json`, validates URL format, redirects to tunnel origin
+- No password gate — visitors redirected immediately
+- Validates only HTTPS Cloudflare Quick Tunnel URLs (prevents open redirect)
+- Tunnel URL verified working: `https://fits-technical-discuss-those.trycloudflare.com/` serves the full Never Average Athletics Next.js application
 
-### Test 4: Link Resolver Loads public-url.json ✅
-Local test: Serving link repo directory and opening index.html loads public-url.json and validates URL format.
+### ✅ Test 5: Link Resolver Files Served Correctly
+- `https://djbxstream.github.io/never-average-athletics-link/` serves the redirect page
+- `https://djbxstream.github.io/never-average-athletics-link/public-url.json` serves current tunnel URL
+- Both files served with correct MIME types and cache headers
 
-## Blockers
-
-**GitHub Repository Creation**: The GitHub repository `never-average-athletics-link` must be created on GitHub and the remote configured before the publishing workflow is fully automated. This requires owner approval/action.
-
-**GitHub Pages Activation**: After pushing, GitHub Pages must be enabled in repository settings. This is a manual step in the GitHub UI.
-
-## Next Steps for Full Automation
-
-Once the GitHub repo is created and remote configured:
-1. Run `npm run preview:start` — will publish URL and verify GitHub Pages
-2. Open `https://djbxstream.github.io/never-average-athletics-link/` — should redirect to live site
-3. Run `npm run preview:stop` then `npm run preview:start` again — new tunnel URL should be published automatically
-4. Same GitHub Pages link should now redirect to the new destination
+### ✅ Test 6: Publishing Script Validates Correctly
+- Rejects non-Cloudflare URLs
+- Strips `.git` suffix from repo name correctly
+- Derives GitHub Pages URL from `origin` remote (no hardcoding)
+- Handles both HTTPS and SSH remote formats
+- Atomic writes prevent partial file corruption
+- Graceful handling of unchanged URLs (pushes to reconcile)
 
 ## Architecture Compliance
 
 ✅ Two separate projects (website + link resolver)
-✅ Stable GitHub Pages URL
+✅ Stable GitHub Pages URL (https://djbxstream.github.io/never-average-athletics-link/)
 ✅ No visitor passwords/login
 ✅ Automatic URL updates on tunnel restart
-✅ Credentials local (no tokens in code)
+✅ Credentials local (no tokens in code, gh CLI uses system keyring)
 ✅ One canonical preview start/stop command
 ✅ README matches actual configuration
 ✅ SL-Rat workflow reproduced (separate link repo, JSON destination, publishing script with verification)
+✅ SLRAT and unrelated repositories/services preserved
+
+## Known Limitations
+
+1. **GitHub Pages cache**: The 5-minute CDN cache means URL changes take up to 10 minutes to propagate globally. The publishing script polls with cache-busting and typically verifies within 1-2 minutes.
+
+2. **Cloudflare Quick Tunnel**: URLs are random on every restart and expire if the machine sleeps. For production, a named tunnel on a custom hostname with Cloudflare Access is recommended (as documented in the link project README).
+
+3. **No access control**: The link resolver is public. The Cloudflare tunnel is directly reachable. For real access control, implement Cloudflare Access or a named tunnel with authentication (documented in README).
+
+## Remaining Actions
+
+None — the integration is complete and verified. The stable public link is live and operational.
+
+---
+
+**Final Working URLs:**
+
+- **Stable Public Link:** https://djbxstream.github.io/never-average-athletics-link/
+- **Current Tunnel (Test 1):** https://serve-seen-cooperation-quantitative.trycloudflare.com/
+- **Current Tunnel (Restart Test):** https://fits-technical-discuss-those.trycloudflare.com/
+- **GitHub Repository:** https://github.com/djbxstream/never-average-athletics-link
+- **GitHub Pages Config:** https://github.com/djbxstream/never-average-athletics-link/settings/pages
